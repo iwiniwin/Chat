@@ -14,6 +14,7 @@ namespace Chat
     class ChatClient : ChatBase
     {
         public int TryConnectInterval = 2000;
+        public override event ConnectEventHandler OnConnect;
         public ChatClient(string ip, int port) : base(ip, port) { }
 
         public override void Start()
@@ -36,9 +37,10 @@ namespace Chat
                 try
                 {
                     Console.WriteLine("try connect ... ...");
-                    socket.Connect(this.ConnectIPEndPoint);
+                    socket.Connect(this.GetIPEndPoint());
                     // 如果连接上
                     this.ConnectedSocket = socket;
+                    OnConnect();
                     this.StartReceive();
                     Console.WriteLine("connected ... ..." + socket.RemoteEndPoint.ToString());
                     break;

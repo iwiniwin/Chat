@@ -12,7 +12,20 @@ namespace Chat
 {
     class ChatServer : ChatBase
     {
-        public ChatServer(string ip, int port) : base(ip, port) { }
+        public override event ConnectEventHandler OnConnect;
+        public ChatServer(string ip, int port) : base(ip, port) {
+
+            string localIP = string.Empty;
+            foreach(IPAddress address in Dns.GetHostEntry(Dns.GetHostName()).AddressList)
+            {
+                if(address.AddressFamily.ToString() == "InterNetwork")
+                {
+                    localIP = address.ToString();
+                }
+            }
+
+            this.ip = localIP;
+        }
 
         public override void Start()
         {
@@ -23,7 +36,7 @@ namespace Chat
         {
             Socket socket = GetSocket();
             // 将套接字与IPEndPoint绑定
-            socket.Bind(this.ConnectIPEndPoint);
+            socket.Bind(this.GetIPEndPoint());
             // 开启监听 仅支持一个连接
             socket.Listen(1);
 
@@ -42,6 +55,7 @@ namespace Chat
                     Socket connectedSocket = socket.Accept();
 
                     this.ConnectedSocket = connectedSocket;
+                    OnConnect();
                     this.StartReceive();
                     break;
                 }

@@ -11,20 +11,32 @@ using System.Net;
 namespace Chat
 {
     public delegate void OnReceiveEventHandler(string msg);
+    public delegate void DisconnectEventHandler(Exception e);
+    public delegate void ConnectEventHandler();
     abstract class ChatBase
     {
         public Socket ConnectedSocket { get; set; }
         public bool AutoReConnect { get; set; } = true;
-        public IPEndPoint ConnectIPEndPoint { get; set; }
         public event OnReceiveEventHandler OnReceive;
+        public event DisconnectEventHandler OnDisconnect;
+        public abstract event ConnectEventHandler OnConnect;
         private Socket socket;
+
+        public string ip;
+        public int port;
 
         public ChatBase(string ip, int port)
         {
-            ConnectIPEndPoint = new IPEndPoint(IPAddress.Parse(ip), port);
+            this.ip = ip;
+            this.port = port;
         }
 
         public abstract void Start();
+
+        public IPEndPoint GetIPEndPoint()
+        {
+            return new IPEndPoint(IPAddress.Parse(ip), port);
+        }
 
         public Socket GetSocket()
         {
@@ -73,6 +85,7 @@ namespace Chat
                     }
                     catch (Exception e)
                     {
+                        OnDisconnect(e);
                         // 连接异常断开
                         if (AutoReConnect)
                         {

@@ -15,6 +15,8 @@ namespace Chat
         Server,
         Client
     }
+    public delegate void ConnectStateEventHandler(bool connected);
+    public delegate void SettingEventHandler(string localName, string remoteName, string ip);
     public partial class Form1 : Form
     {
         public ChatMode mode = ChatMode.Server;
@@ -28,7 +30,10 @@ namespace Chat
         public Form1()
         {
             InitializeComponent();
-            
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
             if (mode == ChatMode.Server)
             {
                 chat = new ChatServer(ip, port);
@@ -39,10 +44,18 @@ namespace Chat
                 chat = new ChatClient(ip, port);
                 this.Text = "C-Chat";
             }
-            
+
             chat.OnReceive += delegate (string msg)
             {
                 this.charContentRichText.Invoke(new OnReceiveEventHandler(OnReceiveMsg), msg);
+            };
+            chat.OnConnect += delegate ()
+            {
+                this.Invoke(new ConnectStateEventHandler(SetIconByConnectState), true);
+            };
+            chat.OnDisconnect += delegate (Exception ex)
+            {
+                this.Invoke(new ConnectStateEventHandler(SetIconByConnectState), false);
             };
             chat.Start();
         }
@@ -52,6 +65,18 @@ namespace Chat
             SetTextValue(remoteName, msg);
         }
 
+        public void SetIconByConnectState(bool connected)
+        {
+            if (connected)
+            {
+                this.Icon = Properties.Resources.connected;
+            }
+            else
+            {
+                this.Icon = Properties.Resources.noconnected;
+            }
+        }
+
         public void SetTextValue(string name, string msg)
         {
             this.charContentRichText.AppendText(name + " : \n" + msg + "\n");
@@ -59,7 +84,7 @@ namespace Chat
 
         private void selectFileBtn_Click(object sender, EventArgs e)
         {
-
+            
         }
 
         private void sendBtn_Click(object sender, EventArgs e)
@@ -73,5 +98,22 @@ namespace Chat
                     SetTextValue(localName, msg);
             }
         }
+
+        private void onSetting(string localName, string remoteName, string ip)
+        {
+            this.localName = localName;
+            this.remoteName = remoteName;
+            chat.ip = ip;
+        }
+
+        private void settingBtn_Click(object sender, EventArgs e)
+        {
+            Form2 settingForm = new Form2(new SettingEventHandler(onSetting), this.localName, this.remoteName, chat.ip);
+            settingForm.StartPosition = FormStartPosition.CenterParent;
+            settingForm.SetIpEditEnable(mode == ChatMode.Client);
+            settingForm.ShowDialog();
+        }
+
+        
     }
 }
