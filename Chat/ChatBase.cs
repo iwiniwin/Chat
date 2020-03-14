@@ -7,12 +7,20 @@ using System.Net.Sockets;
 using System.Threading;
 using static System.Text.Encoding;
 using System.Net;
+using System.IO;
 
 namespace Chat
 {
-    public delegate void OnReceiveEventHandler(string msg);
+    public delegate void OnReceiveEventHandler(ChatType type, string msg);
     public delegate void DisconnectEventHandler(Exception e);
     public delegate void ConnectEventHandler();
+
+    public enum ChatType : byte {
+        Str,
+        File,
+    }
+
+
     abstract class ChatBase
     {
         public Socket ConnectedSocket { get; set; }
@@ -47,13 +55,85 @@ namespace Chat
             return socket;
         }
 
+        private bool SendByte(byte[] buffer, int size)
+        {
+            if (ConnectedSocket != null && ConnectedSocket.Connected)
+            {
+                try
+                {
+                    ConnectedSocket.Send(buffer, 0, size, SocketFlags.None);
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message + "   ooo");
+                }
+            }
+            return false;
+        }
+
+        private bool SendImpl(string msg)
+        {
+            //Console.WriteLine(msg + "     vvvv");
+            byte[] buffer = UTF8.GetBytes(msg);
+            return SendByte(buffer, buffer.Length);
+        }
+
         public bool Send(string msg)
         {
-            if(ConnectedSocket != null && ConnectedSocket.Connected)
+            //return SendImpl("_str_:" + msg);
+            
+            if (ConnectedSocket != null && ConnectedSocket.Connected)
             {
                 byte[] buffer = UTF8.GetBytes(msg);
-                ConnectedSocket.Send(buffer);
-                return true;
+                byte[] len = BitConverter.GetBytes((long)buffer.Length);
+                byte[] content = new byte[1 + len.Length + buffer.Length];
+                content[0] = (byte)ChatType.Str;
+                Array.Copy(len, 0, content, 1, len.Length);
+                Array.Copy(buffer, 0, content, 1 + len.Length, buffer.Length);
+
+                try
+                {
+                    ConnectedSocket.Send(content);
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message + "   ooo");
+                }
+            }
+            return false;
+        }
+
+        public bool SendFile(string path)
+        {
+            if (ConnectedSocket != null && ConnectedSocket.Connected)
+            {
+                try
+                {
+                    FileInfo fi = new FileInfo(path);
+                    byte[] len = BitConverter.GetBytes(fi.Length);
+                    byte[] name = UTF8.GetBytes(fi.Name);
+                    byte[] nameLen = BitConverter.GetBytes(name.Length);
+                    byte[] head = new byte[1 + len.Length + nameLen.Length + name.Length];
+                    head[0] = (byte)ChatType.File;
+                    Array.Copy(len, 0, head, 1, len.Length);
+                    Array.Copy(nameLen, 0, head, 1 + len.Length, nameLen.Length);
+                    Array.Copy(name, 0, head, 1 + len.Length + nameLen.Length, name.Length);
+                    ConnectedSocket.SendFile(
+                        path,
+                        head,
+                        null,
+                        TransmitFileOptions.UseDefaultWorkerThread
+                    );
+                    return true;
+                }
+                catch(Exception e)
+                {
+                    // 连接断开了
+                    Console.WriteLine("send file exception : " + e.Message);
+                }
+                
             }
             return false;
         }
@@ -65,6 +145,7 @@ namespace Chat
             receiveThread.Start();
         }
 
+        private FileStream m_FileStream;
         public void Receive()
         {
             if (ConnectedSocket != null)
@@ -73,14 +154,42 @@ namespace Chat
                 {
                     try
                     {
-                        byte[] buffer = new byte[1024];
-                        int size = ConnectedSocket.Receive(buffer);
-                        if (size > 0)
+                        byte[] head = new byte[9];
+                        ConnectedSocket.Receive(head, head.Length, SocketFlags.None);
+
+                        int len = BitConverter.ToInt32(head, 1);
+                        if (head[0] == (byte) ChatType.Str)
                         {
-                            string msg = UTF8.GetString(buffer, 0, size);
-                            // 接收到消息
-                            //Console.WriteLine("receive : " + msg);
-                            OnReceive(msg);
+                            byte[] buffer = new byte[len];
+                            ConnectedSocket.Receive(buffer, len, SocketFlags.None);
+                            OnReceive(ChatType.Str, UTF8.GetString(buffer));
+                        }
+                        else if(head[0] == (byte)ChatType.File)
+                        {
+                            byte[] nameLen = new byte[4];
+                            ConnectedSocket.Receive(nameLen, nameLen.Length, SocketFlags.None);
+
+                            byte[] name = new byte[BitConverter.ToInt32(nameLen, 0)];
+                            ConnectedSocket.Receive(name, name.Length, SocketFlags.None);
+                            string fileName = UTF8.GetString(name);
+
+                            int readByte = 0;
+                            int count = 0;
+                            byte[] buffer = new byte[1024 * 8];
+                            using (FileStream fs = new FileStream(fileName, FileMode.Append, FileAccess.Write))
+                            {
+                                while (count != len)
+                                {
+                                    readByte = ConnectedSocket.Receive(buffer, buffer.Length, SocketFlags.None);
+                                    fs.Write(buffer, 0, readByte);
+                                    count += readByte;
+                                }
+                            }
+                            OnReceive(ChatType.File, fileName);
+                        }
+                        else
+                        {
+                            // 未知类型
                         }
                     }
                     catch (Exception e)

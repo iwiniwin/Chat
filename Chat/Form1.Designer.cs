@@ -72,7 +72,7 @@
             this.sendBtn.Name = "sendBtn";
             this.sendBtn.Size = new System.Drawing.Size(108, 31);
             this.sendBtn.TabIndex = 7;
-            this.sendBtn.Text = "发送信息";
+            this.sendBtn.Text = "发送";
             this.sendBtn.UseVisualStyleBackColor = true;
             this.sendBtn.Click += new System.EventHandler(this.sendBtn_Click);
             // 
