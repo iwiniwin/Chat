@@ -103,13 +103,17 @@ namespace Chat
         private void selectFileBtn_Click(object sender, EventArgs e)
         {
             OpenFileDialog dia = new OpenFileDialog();
+            dia.Multiselect = true;
             dia.Title = "请选择要发送的文件";
             dia.ShowDialog();
-            if(dia.FileName != null && dia.FileName != "")
+            foreach(string fileName in dia.FileNames)
             {
-                this.selectFileQueue.Enqueue(dia.FileName);
-                string name = Path.GetFileName(dia.FileName);
-                this.sendTextBox.AppendText("[" + name + "]");
+                if (fileName != null && fileName != "")
+                {
+                    this.selectFileQueue.Enqueue(fileName);
+                    string name = Path.GetFileName(fileName);
+                    this.sendTextBox.AppendText("[" + name + "]");
+                }
             }
         }
 
