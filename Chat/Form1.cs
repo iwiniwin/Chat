@@ -29,7 +29,7 @@ namespace Chat
         public int port = 30;
         private ChatBase chat;
 
-        private string selectFilePath;
+        private Queue<string> selectFileQueue = new Queue<string>();
 
         public Form1()
         {
@@ -51,7 +51,14 @@ namespace Chat
 
             chat.OnReceive += delegate (ChatType type, string msg)
             {
-                this.charContentRichText.Invoke(new OnReceiveEventHandler(OnReceiveMsg), type, msg);
+                if (type == ChatType.File)
+                {
+
+                }
+                else if (type == ChatType.Str)
+                {
+                    this.charContentRichText.Invoke(new OnReceiveEventHandler(OnReceiveMsg), type, msg);
+                }
             };
             chat.OnConnect += delegate ()
             {
@@ -91,24 +98,29 @@ namespace Chat
             OpenFileDialog dia = new OpenFileDialog();
             dia.Title = "请选择要发送的文件";
             dia.ShowDialog();
-            this.selectFilePath = dia.FileName;
+            if(dia.FileName != null && dia.FileName != "")
+            {
+                this.selectFileQueue.Enqueue(dia.FileName);
+                string name = Path.GetFileName(dia.FileName);
+                this.sendTextBox.AppendText("[" + name + "]");
+            }
         }
 
         private void sendBtn_Click(object sender, EventArgs e)
         {
-            if (this.selectFilePath != null)
+            while (this.selectFileQueue.Count > 0)
             {
-                chat.SendFile(this.selectFilePath);
-                this.selectFilePath = null;
+                string path = this.selectFileQueue.Dequeue();
+                chat.SendFile(path);
             }
-            else
+            string msg = this.sendTextBox.Text;
+            if (msg != "")
             {
-                string msg = this.sendTextBox.Text;
-                if (msg != "")
+                Console.WriteLine(msg + "       send....");
+                bool ret = chat.Send(msg);
+                if (ret)
                 {
-                    bool ret = chat.Send(msg);
-                    if (ret)
-                        this.sendTextBox.Text = "";
+                    this.sendTextBox.Text = "";
                     SetTextValue(localName, msg);
                 }
             }
@@ -129,6 +141,9 @@ namespace Chat
             settingForm.ShowDialog();
         }
 
-        
+        private void sendTextBox_TextChanged(object sender, EventArgs e)
+        {
+            
+        }
     }
 }

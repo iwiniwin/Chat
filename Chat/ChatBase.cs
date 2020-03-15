@@ -55,34 +55,8 @@ namespace Chat
             return socket;
         }
 
-        private bool SendByte(byte[] buffer, int size)
-        {
-            if (ConnectedSocket != null && ConnectedSocket.Connected)
-            {
-                try
-                {
-                    ConnectedSocket.Send(buffer, 0, size, SocketFlags.None);
-                    return true;
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.Message + "   ooo");
-                }
-            }
-            return false;
-        }
-
-        private bool SendImpl(string msg)
-        {
-            //Console.WriteLine(msg + "     vvvv");
-            byte[] buffer = UTF8.GetBytes(msg);
-            return SendByte(buffer, buffer.Length);
-        }
-
         public bool Send(string msg)
         {
-            //return SendImpl("_str_:" + msg);
-            
             if (ConnectedSocket != null && ConnectedSocket.Connected)
             {
                 byte[] buffer = UTF8.GetBytes(msg);
@@ -145,7 +119,6 @@ namespace Chat
             receiveThread.Start();
         }
 
-        private FileStream m_FileStream;
         public void Receive()
         {
             if (ConnectedSocket != null)
@@ -171,16 +144,26 @@ namespace Chat
 
                             byte[] name = new byte[BitConverter.ToInt32(nameLen, 0)];
                             ConnectedSocket.Receive(name, name.Length, SocketFlags.None);
+                            
                             string fileName = UTF8.GetString(name);
 
                             int readByte = 0;
                             int count = 0;
                             byte[] buffer = new byte[1024 * 8];
+                            if (File.Exists(fileName))
+                            {
+                                File.Delete(fileName);
+                            }
                             using (FileStream fs = new FileStream(fileName, FileMode.Append, FileAccess.Write))
                             {
                                 while (count != len)
                                 {
-                                    readByte = ConnectedSocket.Receive(buffer, buffer.Length, SocketFlags.None);
+                                    int readLength = buffer.Length;
+                                    if(len - count < readLength)
+                                    {
+                                        readLength = len - count;
+                                    }
+                                    readByte = ConnectedSocket.Receive(buffer, readLength, SocketFlags.None);
                                     fs.Write(buffer, 0, readByte);
                                     count += readByte;
                                 }

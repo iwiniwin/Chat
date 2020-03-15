@@ -38,11 +38,13 @@
             // 
             // sendTextBox
             // 
+            this.sendTextBox.Font = new System.Drawing.Font("宋体", 12F);
             this.sendTextBox.Location = new System.Drawing.Point(12, 340);
             this.sendTextBox.Multiline = true;
             this.sendTextBox.Name = "sendTextBox";
             this.sendTextBox.Size = new System.Drawing.Size(776, 60);
             this.sendTextBox.TabIndex = 2;
+            this.sendTextBox.TextChanged += new System.EventHandler(this.sendTextBox_TextChanged);
             // 
             // selectFileBtn
             // 
@@ -59,6 +61,7 @@
             this.charContentRichText.BackColor = System.Drawing.SystemColors.Window;
             this.charContentRichText.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.charContentRichText.Cursor = System.Windows.Forms.Cursors.IBeam;
+            this.charContentRichText.Font = new System.Drawing.Font("宋体", 12F);
             this.charContentRichText.Location = new System.Drawing.Point(12, 12);
             this.charContentRichText.Name = "charContentRichText";
             this.charContentRichText.ReadOnly = true;
