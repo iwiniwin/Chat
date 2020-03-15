@@ -73,7 +73,7 @@ namespace Chat
 
         public void OnReceiveMsg(ChatType type, string msg)
         {
-            SetTextValue(remoteName, msg);
+            SetTextValue(false, msg);
         }
 
         public void SetIconByConnectState(bool connected)
@@ -88,8 +88,15 @@ namespace Chat
             }
         }
 
-        public void SetTextValue(string name, string msg)
+        public void SetTextValue(bool isLocal, string msg)
         {
+            string name = this.remoteName;
+            this.charContentRichText.SelectionAlignment = HorizontalAlignment.Right;
+            if (isLocal)
+            {
+                name = this.localName;
+                this.charContentRichText.SelectionAlignment = HorizontalAlignment.Left;
+            }
             this.charContentRichText.AppendText(name + " : \n" + msg + "\n");
         }
 
@@ -121,7 +128,7 @@ namespace Chat
                 if (ret)
                 {
                     this.sendTextBox.Text = "";
-                    SetTextValue(localName, msg);
+                    SetTextValue(true, msg);
                 }
             }
         }
