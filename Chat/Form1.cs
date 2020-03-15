@@ -106,12 +106,17 @@ namespace Chat
             dia.Multiselect = true;
             dia.Title = "请选择要发送的文件";
             dia.ShowDialog();
-            foreach(string fileName in dia.FileNames)
+            OnSelectFiles(dia.FileNames);
+        }
+
+        private void OnSelectFiles(Array paths)
+        {
+            foreach (string path in paths)
             {
-                if (fileName != null && fileName != "")
+                if (path != null && path != "")
                 {
-                    this.selectFileQueue.Enqueue(fileName);
-                    string name = Path.GetFileName(fileName);
+                    this.selectFileQueue.Enqueue(path);
+                    string name = Path.GetFileName(path);
                     this.sendTextBox.AppendText("[" + name + "]");
                 }
             }
@@ -127,7 +132,6 @@ namespace Chat
             string msg = this.sendTextBox.Text;
             if (msg != "")
             {
-                Console.WriteLine(msg + "       send....");
                 bool ret = chat.Send(msg);
                 if (ret)
                 {
@@ -155,6 +159,33 @@ namespace Chat
         private void sendTextBox_TextChanged(object sender, EventArgs e)
         {
             
+        }
+
+        private void sendTextBox_DragDrop(object sender, DragEventArgs e)
+        {
+            Array paths = ((Array)e.Data.GetData(DataFormats.FileDrop));
+            OnSelectFiles(paths);
+        }
+
+        private void sendTextBox_DragEnter(object sender, DragEventArgs e)
+        {
+            Array paths = ((Array)e.Data.GetData(DataFormats.FileDrop));
+            bool canDrag = true;
+            foreach (string path in paths)
+            {
+                if (!File.Exists(path))
+                {
+                    canDrag = false;
+                }
+            }
+            if (canDrag)
+            {
+                e.Effect = DragDropEffects.Link;
+            }
+            else
+            {
+                e.Effect = DragDropEffects.None;
+            }
         }
     }
 }

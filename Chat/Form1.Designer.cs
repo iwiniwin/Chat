@@ -38,6 +38,7 @@
             // 
             // sendTextBox
             // 
+            this.sendTextBox.AllowDrop = true;
             this.sendTextBox.Font = new System.Drawing.Font("宋体", 12F);
             this.sendTextBox.Location = new System.Drawing.Point(12, 340);
             this.sendTextBox.Multiline = true;
@@ -45,6 +46,8 @@
             this.sendTextBox.Size = new System.Drawing.Size(776, 60);
             this.sendTextBox.TabIndex = 2;
             this.sendTextBox.TextChanged += new System.EventHandler(this.sendTextBox_TextChanged);
+            this.sendTextBox.DragDrop += new System.Windows.Forms.DragEventHandler(this.sendTextBox_DragDrop);
+            this.sendTextBox.DragEnter += new System.Windows.Forms.DragEventHandler(this.sendTextBox_DragEnter);
             // 
             // selectFileBtn
             // 
