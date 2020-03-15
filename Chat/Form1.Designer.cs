@@ -48,6 +48,7 @@
             this.sendTextBox.TextChanged += new System.EventHandler(this.sendTextBox_TextChanged);
             this.sendTextBox.DragDrop += new System.Windows.Forms.DragEventHandler(this.sendTextBox_DragDrop);
             this.sendTextBox.DragEnter += new System.Windows.Forms.DragEventHandler(this.sendTextBox_DragEnter);
+            this.sendTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.sendTextBox_KeyPress);
             // 
             // selectFileBtn
             // 

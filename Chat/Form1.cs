@@ -98,6 +98,7 @@ namespace Chat
                 this.charContentRichText.SelectionAlignment = HorizontalAlignment.Left;
             }
             this.charContentRichText.AppendText(name + " : \n" + msg + "\n");
+            this.charContentRichText.ScrollToCaret();
         }
 
         private void selectFileBtn_Click(object sender, EventArgs e)
@@ -130,6 +131,7 @@ namespace Chat
                 chat.SendFile(path);
             }
             string msg = this.sendTextBox.Text;
+            msg = msg.TrimEnd();
             if (msg != "")
             {
                 bool ret = chat.Send(msg);
@@ -185,6 +187,15 @@ namespace Chat
             else
             {
                 e.Effect = DragDropEffects.None;
+            }
+        }
+
+        private void sendTextBox_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == 10)
+            {
+                e.Handled = true;
+                sendBtn_Click(null, null);
             }
         }
     }
