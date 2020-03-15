@@ -32,6 +32,7 @@ namespace Chat
 
         public string ip;
         public int port;
+        public string dirName = "ChatFiles";
 
         public ChatBase(string ip, int port)
         {
@@ -139,6 +140,11 @@ namespace Chat
                         }
                         else if(head[0] == (byte)ChatType.File)
                         {
+                            if (!Directory.Exists(dirName))
+                            {
+                                Directory.CreateDirectory(dirName);
+                            }
+
                             byte[] nameLen = new byte[4];
                             ConnectedSocket.Receive(nameLen, nameLen.Length, SocketFlags.None);
 
@@ -150,11 +156,13 @@ namespace Chat
                             int readByte = 0;
                             int count = 0;
                             byte[] buffer = new byte[1024 * 8];
-                            if (File.Exists(fileName))
+
+                            string filePath = Path.Combine(dirName, fileName);
+                            if (File.Exists(filePath))
                             {
-                                File.Delete(fileName);
+                                File.Delete(filePath);
                             }
-                            using (FileStream fs = new FileStream(fileName, FileMode.Append, FileAccess.Write))
+                            using (FileStream fs = new FileStream(filePath, FileMode.Append, FileAccess.Write))
                             {
                                 while (count != len)
                                 {
