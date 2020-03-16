@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
+using System.Configuration;
 
 namespace Chat
 {
@@ -20,13 +21,10 @@ namespace Chat
     public delegate void SettingEventHandler(string localName, string remoteName, string ip);
     public partial class Form1 : Form
     {
-        public ChatMode mode = ChatMode.Server;
+        public ChatMode mode = ChatMode.Client;
 
         public string localName = "local";
         public string remoteName = "remote";
-        //public string ip = "127.0.0.1";
-        public string ip = "192.168.1.2";
-        public int port = 30;
         private ChatBase chat;
 
         private Queue<string> selectFileQueue = new Queue<string>();
@@ -38,6 +36,11 @@ namespace Chat
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            localName = ConfigurationManager.AppSettings["localName"] ?? "local";
+            remoteName = ConfigurationManager.AppSettings["remoteName"] ?? "remote";
+            string ip = ConfigurationManager.AppSettings["ip"] ?? "127.0.0.1";
+            int port = Convert.ToInt32(ConfigurationManager.AppSettings["port"]);
+            port = port == 0 ? 30 : port;
             if (mode == ChatMode.Server)
             {
                 chat = new ChatServer(ip, port);
@@ -145,9 +148,38 @@ namespace Chat
 
         private void onSetting(string localName, string remoteName, string ip)
         {
-            this.localName = localName;
-            this.remoteName = remoteName;
-            chat.ip = ip;
+            if(localName != this.localName || remoteName != this.remoteName || ip != chat.ip)
+            {
+                Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                this.localName = localName;
+                if (config.AppSettings.Settings["localName"] == null)
+                {
+                    config.AppSettings.Settings.Add("localName", localName);
+                }
+                else
+                {
+                    config.AppSettings.Settings["localName"].Value = localName;
+                }
+                this.remoteName = remoteName;
+                if (config.AppSettings.Settings["remoteName"] == null)
+                {
+                    config.AppSettings.Settings.Add("remoteName", remoteName);
+                }
+                else
+                {
+                    config.AppSettings.Settings["remoteName"].Value = remoteName;
+                }
+                chat.ip = ip;
+                if (config.AppSettings.Settings["ip"] == null)
+                {
+                    config.AppSettings.Settings.Add("ip", ip);
+                }
+                else
+                {
+                    config.AppSettings.Settings["ip"].Value = ip;
+                }
+                config.Save();
+            }
         }
 
         private void settingBtn_Click(object sender, EventArgs e)
