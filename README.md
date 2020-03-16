@@ -3,9 +3,9 @@
 ![main](Doc/main.png)
 ## 使用
 * 第一次使用，客户端需要设置待连接的IP地址。之后再启动会自动连接
-    1. 双击服务端exe启动，点击`设置`，查看IP地址项
+    1. 双击服务端exe启动，点击`设置`，查看IP地址项<br/>
     ![schat_setting](Doc/schat_setting.png)
-    2. 双击客户端exe启动，点击`设置`，在`IP地址`项，输入服务端查看到的IP地址 
+    2. 双击客户端exe启动，点击`设置`，在`IP地址`项，输入服务端查看到的IP地址<br/> 
     ![cchat_setting](Doc/cchat_setting.png)
     
 * 设置成功后，等待大约一两秒，**应用cion变成绿色**，即表示连接成功，可以正常发送文字和文件了
